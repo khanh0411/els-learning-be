@@ -95,6 +95,7 @@ const sendEmail = async (sendTo, url, name, subject) => {
 </html>`
   };
 
+  console.log(mailOptions.html)
   return new Promise((resolve, reject) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
