@@ -68,5 +68,3 @@ API backend có các endpoint như sau:
 - **Công cụ**: JWT, Passport.js
 
 Hãy liên hệ nếu bạn có thêm thắc mắc hoặc gặp lỗi trong quá trình cài đặt.
-
-
