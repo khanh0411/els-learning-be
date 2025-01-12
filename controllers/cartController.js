@@ -3,7 +3,6 @@ const CartDetail = require("../models/Cart/cartDetail");
 const Section = require("../models/sections");
 const StudentCourse = require("../models/student_course");
 
-
 async function checkCartExist(user_id) {
     const userCart = await cart.findOne({ user_id: user_id });
     if (!userCart) {
