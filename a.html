@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .message, .reply {
+            background: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .reply {
+            margin-left: 20px;
+            background: #f9f9f9;
+        }
+        .reply.reply-to-reply {
+            margin-left: 40px;
+            background: #e9e9e9;
+        }
+        h3 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Viewer</h1>
+    <div id="messageContainer">Loading messages...</div>
+    <script>
+        const API_URL = 'http://192.168.1.18:2602/api/chat/getMessages'; // Thay bằng URL API của bạn
+        const container = document.getElementById('messageContainer');
+    
+        function renderMessage(message, isReply = false, isReplyToReply = false) {
+            const div = document.createElement('div');
+            div.className = isReply ? (isReplyToReply ? 'reply reply-to-reply' : 'reply') : 'message';
+    
+            div.innerHTML = `
+                <p><span class="sender">Người gửi:</span> ${message.sender.full_name} (${message.sender.email})</p>
+                <p><span class="receiver">Người nhận:</span> ${message.receiver.full_name} (${message.receiver.email})</p>
+                <p><span class="content">Nội dung:</span> ${message.message}</p>
+            `;
+    
+            container.appendChild(div);
+        }
+    
+        function renderReplies(replies, parentId, isReplyToReply = false) {
+            replies.filter(reply => reply.replyTo && reply.replyTo._id === parentId).forEach(reply => {
+                renderMessage(reply, true, isReplyToReply);
+                renderReplies(replies, reply._id, true);
+            });
+        }
+    
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY3NWQyOGM5MzI2ODBmMTllM2YzYmUwNyIsInVzZXJfaWQiOiI2NzVkMjg5OTEzZDE5NWFjYjc0N2UxMjMiLCJmdWxsX25hbWUiOiJKb2huIERvZTIiLCJkb2IiOiIxOTkwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInBhc3N3b3JkIjoiJDJhJDEwJDVwS21MYjFTV00wYmtGVVViL3cxNU94MzZSeTNnOXZtQWl1VzM3SG5tRGVteWk3VGt5UEE2IiwiYXZhdGFyX3VybCI6Imh0dHBzOi8vZXhhbXBsZS5jb20vYXZhdGFyLmpwZyIsInN0YXR1cyI6MSwicm9sZSI6MSwiY3JlYXRlZF9hdCI6IjIwMjQtMTItMTRUMDY6NDE6MjkuNzE1WiIsInVwZGF0ZWRfYXQiOiIyMDI0LTEyLTE0VDA2OjQxOjI5LjcxNloiLCJfX3YiOjAsImNvaW4iOiIxMDAiLCJjb2RlIjoiMTIxMjRzYWRncyJ9LCJpYXQiOjE3MzU0MTI5NzYsImV4cCI6MTczNjAxNzc3Nn0.r6hHQnULwo9a4In4J8yxRaCUJGmzSRqs-TVrAzTfqVw',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                         "id_message":"6770c247e0044a5bc13a265b"
+                    })
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+    
+                const data = await response.json();
+                console.log(data);
+                // Hiển thị tin nhắn gốc
+                renderMessage(data.messages);
+    
+                // Hiển thị các phản hồi
+                renderReplies(data.replies, data.messages._id);
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<p>Không thể tải dữ liệu.</p>';
+            }
+        }
+    
+        fetchData();
+    </script>
+</body>
+</html>
