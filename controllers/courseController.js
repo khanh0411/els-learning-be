@@ -354,12 +354,12 @@ exports.getAllCourses3 = async (req, res) => {
                 $sort: { createdAt: -1 }
             }
         ]
-        if (user_id) {
-            const student_courses = await StudentCourse.find({ user_id: user_id });
-            pipeline.unshift({ $match: { course_id: { $nin: student_courses.map(e => e.course_id) } } });
-            const courses = await Course.aggregate(pipeline);
-            return res.status(200).json(courses); // Trả về danh sách courses
-        }
+        // if (user_id) {
+        //     const student_courses = await StudentCourse.find({ user_id: user_id });
+        //     pipeline.unshift({ $match: { course_id: { $nin: student_courses.map(e => e.course_id) } } });
+        //     const courses = await Course.aggregate(pipeline);
+        //     return res.status(200).json(courses); // Trả về danh sách courses
+        // }
 
 
         const courses = await Course.aggregate(pipeline).sort({ createdAt: -1 });
