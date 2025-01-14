@@ -493,7 +493,11 @@ exports.updateRechargeStatus = async (req, res) => {
             coin: coin
         })
 
-        return res.status(200).json({ message: 'Purchase status updated successfully' });
+        if (status === 'completed') {
+            return res.status(200).json({ message: 'completed' });
+        } else if (status === 'cancelled') {
+            return res.status(200).json({ message: 'cancelled' });
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

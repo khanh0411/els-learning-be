@@ -194,7 +194,8 @@ exports.getAllCourses = async (req, res) => {
                     cert: { $first: '$cert' },
                     user_name: { $first: '$user_name' },
                     sections: { $push: '$sections' }, // Gộp lại các sections, bao gồm lessons
-                    questionsets: { $push: '$questionsets' }
+                    questionsets: { $push: '$questionsets' },
+                    createdAt: { $first: '$created_at' },
                 }
             },
             {
@@ -220,8 +221,12 @@ exports.getAllCourses = async (req, res) => {
                     cert: 1,
                     user_name: 1,
                     sections: 1, // Trả về đầy đủ sections và lessons
-                    questionsets: 1
+                    questionsets: 1,
+                    createdAt: 1
                 }
+            },
+            {
+                $sort: { createdAt: -1 }
             }
         ]);
 
@@ -315,7 +320,8 @@ exports.getAllCourses3 = async (req, res) => {
                     cert: { $first: '$cert' },
                     user_name: { $first: '$user_name' },
                     sections: { $push: '$sections' }, // Gộp lại các sections, bao gồm lessons
-                    questionsets: { $push: '$questionsets' }
+                    questionsets: { $push: '$questionsets' },
+                    createdAt: { $first: '$created_at' },
                 }
             },
             {
@@ -341,8 +347,12 @@ exports.getAllCourses3 = async (req, res) => {
                     cert: 1,
                     user_name: 1,
                     sections: 1, // Trả về đầy đủ sections và lessons
-                    questionsets: 1
+                    questionsets: 1,
+                    createdAt: 1
                 }
+            }, 
+            {
+                $sort: { createdAt: -1 }
             }
         ]
         if (user_id) {
@@ -353,7 +363,7 @@ exports.getAllCourses3 = async (req, res) => {
         }
 
 
-        const courses = await Course.aggregate(pipeline);
+        const courses = await Course.aggregate(pipeline).sort({ createdAt: -1 });
 
         return res.status(200).json(courses); // Trả về danh sách courses
     } catch (error) {
