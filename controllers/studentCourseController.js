@@ -318,24 +318,21 @@ exports.listStudentCourse = async (req, res) => {
 exports.deleteStudentCourse = async (req, res) => {
     try {
         const id = req.body.id;
-        console.log({ id })
         if (!id) {
             return res.status(400).json({ message: 'id is required' });
         }
-        // const ress = await StudentCourse.findOneAndDelete({ _id: id });
-        const ress = await StudentCourse.findByIdAndDelete(id);
-
-        console.log({ ress })
+        const ress =await StudentCourse.findByIdAndDelete(id);
         if (!ress) {
-
             return res.status(400).json({ message: 'Student course not found' });
         }
+        const course = await Course.findOne({ course_id:ress.course_id});
+        const enroll = Number(course.enroll) - 1;
+        await Course.updateOne({ course_id: ress.course_id }, { $set: { enroll: enroll } });
+        if (!course) {
+            return res.status(400).json({ message: 'Course not found' });
+        }
         return res.status(200).json({ message: 'Student course deleted successfully' });
-
-
-
     } catch (error) {
-        console.log(error)
         res.status(500).json({ message: error.message });
     }
 }

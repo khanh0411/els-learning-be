@@ -350,8 +350,7 @@ exports.getAllCourses3 = async (req, res) => {
                     questionsets: 1,
                     createdAt: 1
                 }
-            }, 
-            {
+            }, {
                 $sort: { createdAt: -1 }
             }
         ]
@@ -1166,6 +1165,7 @@ exports.generateQuestionsSet = async (req, res) => {
             const { _id, question, options, difficulty } = q;
             return {
                 questionId: _id,
+                _id,
                 question,
                 options: options.sort(() => Math.random() - 0.5), // Shuffle options
                 difficulty
@@ -1333,32 +1333,32 @@ exports.getResults = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 };
-
 exports.getResultByIdQuestionSet = async (req, res) => {
-
     try {
-        const {
-            course_id,
-            questionSet_id
-        } = req.body;
+        const { course_id, questionSet_id } = req.body;
         const user_id = req.user.user_id;
+
+        // Validate IDs
         if (!mongoose.Types.ObjectId.isValid(course_id)) {
             return res.status(400).json({ message: 'Invalid course ID' });
         }
         if (!mongoose.Types.ObjectId.isValid(questionSet_id)) {
             return res.status(400).json({ message: 'Invalid questionSet ID' });
         }
-        // const course = await Course.findOne({ course_id });
-        // if (!course) {
-        //     return res.status(404).json({ message: 'Course not found' });
-        // }
+
+        // Check if QuestionSet exists
         const questionSet = await QuestionSet.findOne({ _id: questionSet_id, course_id });
         if (!questionSet) {
             return res.status(404).json({ message: 'Question set not found' });
         }
+
+        // Aggregate results
         const results = await Result.aggregate([
             {
-                $match: { user_id: new mongoose.Types.ObjectId(user_id), questionSet_id: new mongoose.Types.ObjectId(questionSet_id) }
+                $match: {
+                    user_id: new mongoose.Types.ObjectId(user_id),
+                    questionSet_id: new mongoose.Types.ObjectId(questionSet_id),
+                }
             },
             {
                 $lookup: {
@@ -1368,39 +1368,60 @@ exports.getResultByIdQuestionSet = async (req, res) => {
                     as: 'questions'
                 }
             },
-            { $limit: 1 }
-            , {
+            {
+                $unwind: '$answers' // Unwind answers to process them individually
+            },
+            {
                 $group: {
                     _id: '$_id',
-                    selectedAnswer: {
-                        $first: {
-                            key: '$answers.selectedAnswer',
-                            value: '$answers.questionId'
+                    selectedAnswers: {
+                        $push: {
+                            key: '$answers.questionId',
+                            value: '$answers.selectedAnswer'
                         }
                     },
                     questions: { $first: '$questions' },
+                    createdAt: { $first: '$createdAt' },
+                    maxResult: { $max: '$result' }
                 }
             },
             {
                 $project: {
                     _id: 0,
-                    selectedAnswer: 1,
-                    questions: 1
+                    selectedAnswers: 1,
+                    questions: 1,
+                    createdAt: 1,
+                    maxResult: 1
                 }
+            },
+            {
+                $sort: { maxResult: -1 }
+            },
+            {
+                $limit: 1
             }
-        ])
-        if (!results) {
+        ]);
+
+        // Check if results exist
+        if (!results || results.length === 0) {
             return res.status(404).json({ message: 'Result not found' });
         }
 
+        // Map questions for client response
+        results[0].questions = results[0].questions.map(q => {
+            const { _id, question, options, difficulty } = q;
+            return {
+                _id,
+                question,
+                options: options.sort(() => Math.random() - 0.5), // Shuffle options
+                difficulty,
+                correctAnswer: options.find(o => o.isCorrect)?.option // Safely get the correct answer
+            };
+        });
 
         return res.status(200).json(results[0]);
-
-
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error(error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
-
-
-
+};

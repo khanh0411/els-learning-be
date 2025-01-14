@@ -2,6 +2,7 @@
 const Section = require('../models/sections');
 const Lesson = require('../models/lessons');
 
+
 exports.createSections = async (req, res) => {
     try {
         const section = new Section(req.body);

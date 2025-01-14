@@ -3,6 +3,7 @@ const CartDetail = require("../models/Cart/cartDetail");
 const Section = require("../models/sections");
 const StudentCourse = require("../models/student_course");
 
+
 async function checkCartExist(user_id) {
     const userCart = await cart.findOne({ user_id: user_id });
     if (!userCart) {
@@ -66,6 +67,7 @@ exports.getCart = async (req, res) => {
     }
 };
 
+
 exports.addToCart = async (req, res) => {
     try {
         const { course_id, price } = req.body;
@@ -126,5 +128,3 @@ exports.removeFromCart = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
-
-
