@@ -66,7 +66,6 @@ exports.getCart = async (req, res) => {
     }
 };
 
-
 exports.addToCart = async (req, res) => {
     try {
         const { course_id, price } = req.body;
